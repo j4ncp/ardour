@@ -202,6 +202,7 @@ protected:
 	void automation_state_changed ();
 
 	void set_interpolation (ARDOUR::AutomationList::InterpolationStyle);
+
 	void interpolation_changed (ARDOUR::AutomationList::InterpolationStyle);
 
 	PBD::ScopedConnectionList _list_connections;
@@ -217,6 +218,8 @@ protected:
 	static bool have_name_font;
 
 	std::string automation_state_off_string () const;
+
+	virtual void add_contents (bool show_regions);
 
 private:
 	int set_state_2X (const XMLNode &, int);
