@@ -61,6 +61,7 @@ PBD::DebugBits PBD::DEBUG::LatencyDelayLine = PBD::new_debug_bit ("latencydelayl
 PBD::DebugBits PBD::DEBUG::LatencyIO = PBD::new_debug_bit ("latencyio");
 PBD::DebugBits PBD::DEBUG::LatencyRoute = PBD::new_debug_bit ("latencyroute");
 PBD::DebugBits PBD::DEBUG::LaunchControlXL = PBD::new_debug_bit("launchcontrolxl");
+PBD::DebugBits PBD::DEBUG::LaunchkeyMk3 = PBD::new_debug_bit("launchkeymk3");
 PBD::DebugBits PBD::DEBUG::Layering = PBD::new_debug_bit ("layering");
 PBD::DebugBits PBD::DEBUG::MTC = PBD::new_debug_bit ("mtc");
 PBD::DebugBits PBD::DEBUG::MackieControl = PBD::new_debug_bit ("mackiecontrol");
