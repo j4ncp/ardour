@@ -66,6 +66,11 @@ using namespace std;
 LaunchkeyMk3::LaunchkeyMk3 (Session& s)
 	: MIDISurface (s, X_("Novation Launchkey MK3"), X_("Launchkey MK3"), false)
 	, gui (0)
+	, in_daw_mode(false)
+	, has_faders(false)
+	, current_pad_mode(LkPadMode::SESSION)
+	, current_pot_mode(LkPotMode::PAN)
+	, current_fader_mode(LkFaderMode::VOLUME)
 /*	, fader_msb (0)
 	, fader_lsb (0)
 	, fader_is_touched (false)
@@ -345,10 +350,13 @@ FaderPort::handle_midi_pitchbend_message (MIDI::Parser &, MIDI::pitchbend_t pb)
 		}
 	}
 }
-
+*/
 void
-FaderPort::handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+LaunchkeyMk3::handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb)
 {
+	//if (tb->controller_number)
+
+	/*
 	bool was_fader = false;
 
 	if (tb->controller_number == 0x0) {
@@ -372,58 +380,84 @@ FaderPort::handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* 
 				_current_stripable->gain_control()->set_value (val, Controllable::UseGroup);
 			}
 		}
-	}
+	}*/
 }
 
 void
-FaderPort::handle_midi_sysex (MIDI::Parser &p, MIDI::byte *buf, size_t sz)
+LaunchkeyMk3::handle_midi_sysex (MIDI::Parser &p, MIDI::byte *buf, size_t sz)
 {
-        DEBUG_TRACE (DEBUG::FaderPort, string_compose ("sysex message received, size = %1\n", sz));
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, string_compose ("sysex message received, size = %1\n", sz));
 
-	if (sz < 17) {
-		return;
+	// check if it is a system identification answer
+	if (sz >= 5 &&
+	    buf[0] == 0xF0 &&
+	    buf[1] == 0x7E &&
+	    buf[3] == 0x06 &&
+	    buf[4] == 0x02) {
+
+		// it is. check if it is a launchkey.
+		if (sz >= 17 &&
+		    buf[5] == 0x00 &&
+		    buf[6] == 0x20 &&
+		    buf[7] == 0x29 &&
+		    buf[10] == 0x00 &&
+		    buf[11] == 0x00 &&
+		    buf[16] == 0xF7) {
+
+			// it very much seems that it is.
+			// extract version and type information.
+			const MIDI::byte launchkeySize = buf[8];
+			const MIDI::byte modeIndicator = buf[9];
+
+			// NOTE: the +0x30 converts from int digits 0-9 to ASCII chars '0' - '9'
+			const char versionInfo[] = {
+				0x30 + buf[12],
+				0x30 + buf[13],
+				0x30 + buf[14],
+				0x30 + buf[15],
+				0
+			};
+
+			switch (launchkeySize) {
+				case 0x34:
+					DEBUG_TRACE(DEBUG::LaunchkeyMk3, "Launchkey Mk3 25 identified via MIDI device inquiry response\n");
+					has_faders = false;
+					break;
+				case 0x35:
+					DEBUG_TRACE(DEBUG::LaunchkeyMk3, "Launchkey Mk3 37 identified via MIDI device inquiry response\n");
+					has_faders = false;
+					break;
+				case 0x36:
+					DEBUG_TRACE(DEBUG::LaunchkeyMk3, "Launchkey Mk3 49 identified via MIDI device inquiry response\n");
+					has_faders = true;
+					break;
+				case 0x37:
+					DEBUG_TRACE(DEBUG::LaunchkeyMk3, "Launchkey Mk3 61 identified via MIDI device inquiry response\n");
+					has_faders = true;
+					break;
+				case 0x40:
+					DEBUG_TRACE(DEBUG::LaunchkeyMk3, "Launchkey Mk3 88 identified via MIDI device inquiry response\n");
+					has_faders = true;
+					break;
+			}
+
+			DEBUG_TRACE(DEBUG::LaunchkeyMk3, string_compose("Firmware version is %1\n", versionInfo));
+			DEBUG_TRACE(DEBUG::LaunchkeyMk3, string_compose("Currently in %1 mode\n", modeIndicator==0x01 ? "APP" : "BOOT"));
+
+			// put device in DAW mode
+			daw_mode_on ();
+
+			// TBD: potentially other init work
+		}
 	}
-
-	if (buf[2] != 0x7f ||
-	    buf[3] != 0x06 ||
-	    buf[4] != 0x02 ||
-	    buf[5] != 0x0 ||
-	    buf[6] != 0x1 ||
-	    buf[7] != 0x06 ||
-	    buf[8] != 0x02 ||
-	    buf[9] != 0x0 ||
-	    buf[10] != 0x01 ||
-	    buf[11] != 0x0) {
-		return;
-	}
-
-	DEBUG_TRACE (DEBUG::FaderPort, "FaderPort identified via MIDI Device Inquiry response\n");
-
-	/* put it into native mode *
-
-	MIDI::byte native[3];
-	native[0] = 0x91;
-	native[1] = 0x00;
-	native[2] = 0x64;
-
-	MIDISurface::write (native, 3);
-
-	all_lights_out ();
-
-	/* catch up on state *
-
-	/* make sure that rec_enable_state is consistent with current device state *
-	get_button (RecEnable).set_led_state (rec_enable_state);
-
-	map_transport_state ();
-	map_recenable_state ();
 }
-*/
+
 int
 LaunchkeyMk3::set_active (bool yn)
 {
 	DEBUG_TRACE (DEBUG::LaunchkeyMk3, string_compose("LaunchkeyMk3::set_active init with yn: '%1'\n", yn));
 
+	// check if already active. If so, do nothing.
 	if (yn == active()) {
 		return 0;
 	}
@@ -456,6 +490,54 @@ LaunchkeyMk3::set_active (bool yn)
 
 	return 0;
 }
+
+void
+LaunchkeyMk3::daw_mode_on()
+{
+	// DAW mode
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Putting Launchkey in DAW mode\n");
+	{
+		// send note on for DAW mode (0x0C) on channel 16
+		const MIDI::byte daw_on[] = { 0x9F, 0x0C, 0x7F };
+		MIDISurface::write (daw_on, 3);
+		in_daw_mode = true;
+	}
+
+	// Continuous control pot pickup
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Enable pot continuous control pot pickup\n");
+	{
+		// send note on for continuous control pot pickup (0x0A) on channel 16
+		const MIDI::byte pickup_on[] = { 0x9F, 0x0A, 0x7F };
+		MIDISurface::write (pickup_on, 3);
+	}
+
+	// init default modes
+	current_pad_mode = LkPadMode::SESSION;
+	current_pot_mode = LkPotMode::PAN;
+	current_fader_mode = LkFaderMode::VOLUME;
+}
+
+void
+LaunchkeyMk3::daw_mode_off()
+{
+	// DAW mode
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Resetting Launchkey to standalone mode\n");
+	{
+		// send note off for DAW mode (0x0C) on channel 16
+		const MIDI::byte daw_off[] = { 0x8F, 0x0C, 0x00 };
+		MIDISurface::write (daw_off, 3);
+		in_daw_mode = false;
+	}
+
+	// Continuous control pot pickup
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Disable pot continuous control pot pickup\n");
+	{
+		// send note off for continuous control pot pickup (0x0A) on channel 16
+		const MIDI::byte pickup_off[] = { 0x8F, 0x0A, 0x00 };
+		MIDISurface::write (pickup_off, 3);
+	}
+}
+
 /*
 bool
 FaderPort::periodic ()
@@ -663,17 +745,9 @@ LaunchkeyMk3::begin_using_device()
 		return -1;
 	}
 
-	/* send device inquiry */
-
-	MIDI::byte buf[6];
-
-	buf[0] = 0xf0;
-	buf[1] = 0x7e;
-	buf[2] = 0x7f;
-	buf[3] = 0x06;
-	buf[4] = 0x01;
-	buf[5] = 0xf7;
-
+	// Ask device for identification.
+	// Check if it really is a launchkey, and if so, which one.
+	const MIDI::byte buf[] = { 0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7 };
 	MIDISurface::write (buf, 6);
 
 	return 0;
@@ -682,6 +756,11 @@ LaunchkeyMk3::begin_using_device()
 int
 LaunchkeyMk3::stop_using_device ()
 {
+	// return from DAW mode if necessary
+	if (in_daw_mode) {
+		daw_mode_off ();
+	}
+
 	/*
 	blink_connection.disconnect ();
 	selection_connection.disconnect ();

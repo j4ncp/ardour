@@ -68,22 +68,22 @@ class LaunchkeyMk3 : public MIDISurface {
 	LaunchkeyMk3 (ARDOUR::Session&);
 	virtual ~LaunchkeyMk3();
 
-	int set_active (bool yn);
+	int set_active (bool yn) override;
 
 	/* we probe for a device when our ports are connected. Before that,
 	   there's no way to know if the device exists or not.
 	 */
 	static bool probe() { return true; }
 
-	std::string input_port_name () const;
-	std::string output_port_name () const;
+	std::string input_port_name () const override;
+	std::string output_port_name () const override;
 
 //	XMLNode& get_state () const;
 //	int set_state (const XMLNode&, int version);
 
-	bool has_editor () const { return true; }
-	void* get_gui () const;
-	void  tear_down_gui ();
+	bool has_editor () const override { return true; }
+	void* get_gui () const override;
+	void  tear_down_gui () override;
 
 	/* Note: because the Launchkey speaks an inherently duplex protocol,
 	   we do not implement get/set_feedback() since this aspect of
@@ -100,8 +100,67 @@ class LaunchkeyMk3 : public MIDISurface {
 	std::weak_ptr<ARDOUR::Stripable> pre_master_stripable;
 	std::weak_ptr<ARDOUR::Stripable> pre_monitor_stripable;
 */
+	// GUI
 	mutable void *gui;
 	void build_gui ();
+
+
+	// Launchkey properties
+
+	// whether Launchkey is in DAW mode. Also used as an indicator
+	// whether we are actually communicating with a real Launchkey
+	bool in_daw_mode;
+
+	// whether we have a bigger model with faders (49, 61, 88)
+	bool has_faders;
+
+	// the pads, faders and pots can each be in one of several modes:
+	enum class LkPadMode {
+		DRUM,
+		SESSION,
+		SCALE_CHORDS,
+		USER_CHORDS,
+		CUSTOM0,
+		CUSTOM1,
+		CUSTOM2,
+		CUSTOM3,
+		DEVICE_SELECT,
+		NAVIGATION
+	};
+
+	enum class LkPotMode {
+		VOLUME,
+		DEVICE,
+		PAN,
+		SEND_A,
+		SEND_B,
+		CUSTOM0,
+		CUSTOM1,
+		CUSTOM2,
+		CUSTOM3
+	};
+
+	enum class LkFaderMode {
+		VOLUME,
+		DEVICE,
+		SEND_A,
+		SEND_B,
+		CUSTOM0,
+		CUSTOM1,
+		CUSTOM2,
+		CUSTOM3
+	};
+
+	LkPadMode current_pad_mode;
+	LkPotMode current_pot_mode;
+	LkFaderMode current_fader_mode;
+
+
+	// helper functions to put Launchkey into and out of DAW mode
+	void daw_mode_on();
+	void daw_mode_off();
+
+
 /*
 	int fader_msb;
 	int fader_lsb;
@@ -110,17 +169,22 @@ class LaunchkeyMk3 : public MIDISurface {
 	PBD::microseconds_t last_encoder_time;
 	int last_good_encoder_delta;
 	int last_encoder_delta, last_last_encoder_delta;
-
-	void handle_midi_sysex (MIDI::Parser &p, MIDI::byte *, size_t);
+*/
+	void handle_midi_sysex (MIDI::Parser &p, MIDI::byte *, size_t) override;
+	void handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb) override;
+/*
 	void handle_midi_polypressure_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 	void handle_midi_pitchbend_message (MIDI::Parser &, MIDI::pitchbend_t pb);
-	void handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
-*/
-	int begin_using_device ();
-	int stop_using_device ();
 
-	int device_acquire () { return 0; }
-	void device_release () {}
+
+*/
+
+	// event handlers called by superclass
+	int begin_using_device () override;
+	int stop_using_device () override;
+
+	int device_acquire () override { return 0; }
+	void device_release () override {}
 
 //	ButtonState button_state;
 /*
@@ -210,9 +274,9 @@ class LaunchkeyMk3 : public MIDISurface {
 	void use_monitor ();
 */
 
-	void stripable_selection_changed ();
-	
-/*	
+	void stripable_selection_changed () override;
+
+/*
 	PBD::ScopedConnection selection_connection;
 	PBD::ScopedConnectionList stripable_connections;
 

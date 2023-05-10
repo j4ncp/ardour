@@ -114,14 +114,14 @@ LKGUI::LKGUI (LaunchkeyMk3& lkmk3)
 
 
 	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Launchkey DAW port IN:")));
+	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Launchkey DAW port incoming:")));
 	l->set_alignment (1.0, 0.5);
 	table.attach (*l, 0, 1, row, row+1, AttachOptions(FILL|EXPAND), AttachOptions(0));
 	table.attach (input_combo, 1, 2, row, row+1, AttachOptions(FILL|EXPAND), AttachOptions(0), 0, 0);
 	row++;
 
 	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Launchkey DAW port OUT:")));
+	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Launchkey DAW port outgoing:")));
 	l->set_alignment (1.0, 0.5);
 	table.attach (*l, 0, 1, row, row+1, AttachOptions(FILL|EXPAND), AttachOptions(0));
 	table.attach (output_combo, 1, 2, row, row+1, AttachOptions(FILL|EXPAND), AttachOptions(0), 0, 0);
@@ -299,12 +299,12 @@ LKGUI::update_port_combo ()
 	vector<string> midi_inputs;
 	vector<string> midi_outputs;
 
-	ARDOUR::AudioEngine::instance()->get_ports ("", ARDOUR::DataType::MIDI, ARDOUR::PortFlags (ARDOUR::IsInput|ARDOUR::IsTerminal), midi_inputs);
-	ARDOUR::AudioEngine::instance()->get_ports ("", ARDOUR::DataType::MIDI, ARDOUR::PortFlags (ARDOUR::IsOutput|ARDOUR::IsTerminal), midi_outputs);
+	ARDOUR::AudioEngine::instance()->get_ports ("", ARDOUR::DataType::MIDI, ARDOUR::PortFlags (ARDOUR::IsOutput|ARDOUR::IsTerminal), midi_inputs);
+	ARDOUR::AudioEngine::instance()->get_ports ("", ARDOUR::DataType::MIDI, ARDOUR::PortFlags (ARDOUR::IsInput|ARDOUR::IsTerminal), midi_outputs);
 
 	Glib::RefPtr<Gtk::ListStore> input = build_midi_port_list (midi_inputs);
 	Glib::RefPtr<Gtk::ListStore> output = build_midi_port_list (midi_outputs);
-	
+
 	bool input_found = false;
 	bool output_found = false;
 
@@ -519,4 +519,4 @@ LKGUI::active_outport_changed (Gtk::ComboBox* combo)
 
 
 
-		
+

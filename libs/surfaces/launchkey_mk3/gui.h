@@ -49,9 +49,9 @@ public:
 
 private:
 	LaunchkeyMk3& lk;
-	
+
 	Gtk::HBox hpacker;
-	
+
 	Gtk::Table table;
 	/*
 	Gtk::Table action_table;
@@ -59,12 +59,6 @@ private:
 	Gtk::ComboBox input_combo;
 	Gtk::ComboBox output_combo;
 	Gtk::Image    image;
-	
-
-	/* the mix, proj, trns and user buttons have no obvious semantics for
-	 * ardour, mixbus etc., so we allow the user to define their
-	 * functionality from a small, curated set of options.
-	 */
 
 /*
 	Gtk::ComboBox mix_combo[3];
