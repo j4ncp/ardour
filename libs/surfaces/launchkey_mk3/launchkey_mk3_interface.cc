@@ -25,7 +25,7 @@ using namespace ARDOUR;
 using namespace ArdourSurface;
 
 static ControlProtocol*
-new_launchkey_mk3_midi_protocol (ControlProtocolDescriptor* /*descriptor*/, Session* s)
+new_launchkey_mk3_midi_protocol (Session* s)
 {
 	LaunchkeyMk3* lk3;
 
@@ -44,25 +44,18 @@ new_launchkey_mk3_midi_protocol (ControlProtocolDescriptor* /*descriptor*/, Sess
 }
 
 static void
-delete_launchkey_mk3_midi_protocol (ControlProtocolDescriptor* /*descriptor*/, ControlProtocol* cp)
+delete_launchkey_mk3_midi_protocol (ControlProtocol* cp)
 {
 	delete cp;
-}
-
-static bool
-probe_launchkey_mk3_midi_protocol (ControlProtocolDescriptor* /*descriptor*/)
-{
-	return LaunchkeyMk3::probe ();
 }
 
 static ControlProtocolDescriptor launchkey_mk3_midi_descriptor = {
 	/*name :              */   "Novation Launchkey MK3",
 	/*id :                */   "uri://ardour.org/surfaces/launchkey_mk3:0",
-	/*ptr :               */   0,
 	/*module :            */   0,
-	/*mandatory :         */   0,
-	/*supports_feedback : */   true,
-	/*probe :             */   probe_launchkey_mk3_midi_protocol,
+	/*available :         */   0,
+	/*probe_port :        */   0,
+	/*match_usb :         */   0,
 	/*initialize :        */   new_launchkey_mk3_midi_protocol,
 	/*destroy :           */   delete_launchkey_mk3_midi_protocol,
 };

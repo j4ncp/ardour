@@ -411,10 +411,10 @@ LaunchkeyMk3::handle_midi_sysex (MIDI::Parser &p, MIDI::byte *buf, size_t sz)
 
 			// NOTE: the +0x30 converts from int digits 0-9 to ASCII chars '0' - '9'
 			const char versionInfo[] = {
-				0x30 + buf[12],
-				0x30 + buf[13],
-				0x30 + buf[14],
-				0x30 + buf[15],
+				static_cast<char>(0x30 + buf[12]),
+				static_cast<char>(0x30 + buf[13]),
+				static_cast<char>(0x30 + buf[14]),
+				static_cast<char>(0x30 + buf[15]),
 				0
 			};
 
