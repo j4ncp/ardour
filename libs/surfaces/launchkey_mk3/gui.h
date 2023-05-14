@@ -52,22 +52,12 @@ private:
 
 	Gtk::HBox hpacker;
 
-	Gtk::Table table;
-	/*
-	Gtk::Table action_table;
-	*/
+	Gtk::Table    table;
 	Gtk::ComboBox input_combo;
 	Gtk::ComboBox output_combo;
 	Gtk::Image    image;
 
-/*
-	Gtk::ComboBox mix_combo[3];
-	Gtk::ComboBox proj_combo[3];
-	Gtk::ComboBox trns_combo[3];
-	Gtk::ComboBox user_combo[2];
-	Gtk::ComboBox foot_combo[3];
-*/
-	void update_port_combo ();
+	void update_port_combos ();
 	PBD::ScopedConnectionList _port_connections;
 	void connection_handler ();
 
@@ -86,20 +76,6 @@ private:
 	Glib::RefPtr<Gtk::ListStore> build_midi_port_list (std::vector<std::string> const & ports);
 	void active_inport_changed (Gtk::ComboBox*);
 	void active_outport_changed (Gtk::ComboBox*);
-/*
-	const ActionManager::ActionModel& action_model;
-*/
-	std::map<std::string,std::string> action_map; // map from action names to paths
-/*
-	void build_action_combo (Gtk::ComboBox& cb, std::vector<std::pair<std::string,std::string> > const & actions, FaderPort::ButtonID, FaderPort::ButtonState);
-	void build_mix_action_combo (Gtk::ComboBox&, FaderPort::ButtonState);
-	void build_proj_action_combo (Gtk::ComboBox&, FaderPort::ButtonState);
-	void build_trns_action_combo (Gtk::ComboBox&, FaderPort::ButtonState);
-	void build_user_action_combo (Gtk::ComboBox&, FaderPort::ButtonState);
-	void build_foot_action_combo (Gtk::ComboBox&, FaderPort::ButtonState);
-
-	void action_changed (Gtk::ComboBox*, FaderPort::ButtonID, FaderPort::ButtonState);
-*/
 };
 
 }

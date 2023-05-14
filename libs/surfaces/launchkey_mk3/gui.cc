@@ -46,6 +46,7 @@ using namespace std;
 using namespace Gtk;
 using namespace Gtkmm2ext;
 
+//----------------------------------------------------------------------------------------------------------
 void*
 LaunchkeyMk3::get_gui () const
 {
@@ -56,6 +57,7 @@ LaunchkeyMk3::get_gui () const
 	return gui;
 }
 
+//----------------------------------------------------------------------------------------------------------
 void
 LaunchkeyMk3::tear_down_gui ()
 {
@@ -70,20 +72,20 @@ LaunchkeyMk3::tear_down_gui ()
 	gui = 0;
 }
 
+//----------------------------------------------------------------------------------------------------------
 void
 LaunchkeyMk3::build_gui ()
 {
 	gui = (void*) new LKGUI (*this);
 }
 
-/*--------------------*/
 
+//----------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 LKGUI::LKGUI (LaunchkeyMk3& lkmk3)
 	: lk (lkmk3)
 	, table (2, 5)
-//	, action_table (5, 4)
 	, ignore_active_change (false)
-//	, action_model (ActionManager::ActionModel::instance ())
 {
 	set_border_width (12);
 
@@ -92,6 +94,7 @@ LKGUI::LKGUI (LaunchkeyMk3& lkmk3)
 	table.set_border_width (12);
 	table.set_homogeneous (false);
 
+	// put an image of the launchkey to the left
 	std::string data_file_path;
 	string name = "launchkeymk3-small.png";
 	Searchpath spath(ARDOUR::ardour_data_search_path());
@@ -102,6 +105,8 @@ LKGUI::LKGUI (LaunchkeyMk3& lkmk3)
 		hpacker.pack_start (image, false, false);
 	}
 
+	// build small table, consisting of two combo boxes (one for input and one for output port each),
+	// along with two labels for the comboboxes
 	Gtk::Label* l;
 	Gtk::Alignment* align;
 	int row = 0;
@@ -111,7 +116,6 @@ LKGUI::LKGUI (LaunchkeyMk3& lkmk3)
 
 	output_combo.pack_start (midi_port_columns.short_name);
 	output_combo.signal_changed().connect (sigc::bind (sigc::mem_fun (*this, &LKGUI::active_outport_changed), &output_combo));
-
 
 	l = manage (new Gtk::Label);
 	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Launchkey DAW port incoming:")));
@@ -127,147 +131,12 @@ LKGUI::LKGUI (LaunchkeyMk3& lkmk3)
 	table.attach (output_combo, 1, 2, row, row+1, AttachOptions(FILL|EXPAND), AttachOptions(0), 0, 0);
 	row++;
 
-/*
-	build_mix_action_combo (mix_combo[0], FaderPort::ButtonState(0));
-	build_mix_action_combo (mix_combo[1], FaderPort::ShiftDown);
-	build_mix_action_combo (mix_combo[2], FaderPort::LongPress);
-
-	build_proj_action_combo (proj_combo[0], FaderPort::ButtonState(0));
-	build_proj_action_combo (proj_combo[1], FaderPort::ShiftDown);
-	build_proj_action_combo (proj_combo[2], FaderPort::LongPress);
-
-	build_trns_action_combo (trns_combo[0], FaderPort::ButtonState(0));
-	build_trns_action_combo (trns_combo[1], FaderPort::ShiftDown);
-	build_trns_action_combo (trns_combo[2], FaderPort::LongPress);
-
-	build_foot_action_combo (foot_combo[0], FaderPort::ButtonState(0));
-	build_foot_action_combo (foot_combo[1], FaderPort::ShiftDown);
-	build_foot_action_combo (foot_combo[2], FaderPort::LongPress);
-*/
-	/* No shift-press combo for User because that is labelled as "next"
-	 * (marker)
-	 */
-/*
-	build_user_action_combo (user_combo[0], FaderPort::ButtonState(0));
-	build_user_action_combo (user_combo[1], FaderPort::LongPress);
-
-	action_table.set_row_spacings (4);
-	action_table.set_col_spacings (6);
-	action_table.set_border_width (12);
-	action_table.set_homogeneous (false);
-
-	int action_row = 0;
-
-	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Press Action")));
-	l->set_alignment (0.5, 0.5);
-	action_table.attach (*l, 1, 2, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Shift-Press Action")));
-	l->set_alignment (0.5, 0.5);
-	action_table.attach (*l, 2, 3, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Long Press Action")));
-	l->set_alignment (0.5, 0.5);
-	action_table.attach (*l, 3, 4, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	action_row++;
-
-	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Mix")));
-	l->set_alignment (1.0, 0.5);
-	action_table.attach (*l, 0, 1, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (mix_combo[0]);
-	action_table.attach (*align, 1, 2, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (mix_combo[1]);
-	action_table.attach (*align, 2, 3, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (mix_combo[2]);
-	action_table.attach (*align, 3, 4, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	action_row++;
-
-	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Proj")));
-	l->set_alignment (1.0, 0.5);
-	action_table.attach (*l, 0, 1, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (proj_combo[0]);
-	action_table.attach (*align, 1, 2, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (proj_combo[1]);
-	action_table.attach (*align, 2, 3, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (proj_combo[2]);
-	action_table.attach (*align, 3, 4, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	action_row++;
-
-	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Trns")));
-	l->set_alignment (1.0, 0.5);
-	action_table.attach (*l, 0, 1, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (trns_combo[0]);
-	action_table.attach (*align, 1, 2, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (trns_combo[1]);
-	action_table.attach (*align, 2, 3, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (trns_combo[2]);
-	action_table.attach (*align, 3, 4, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	action_row++;
-
-	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("User")));
-	l->set_alignment (1.0, 0.5);
-	action_table.attach (*l, 0, 1, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (user_combo[0]);
-	action_table.attach (*align, 1, 2, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	/* skip shift press combo *
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (user_combo[1]);
-	action_table.attach (*align, 3, 4, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	action_row++;
-
-	l = manage (new Gtk::Label);
-	l->set_markup (string_compose ("<span weight=\"bold\">%1</span>", _("Footswitch")));
-	l->set_alignment (1.0, 0.5);
-	action_table.attach (*l, 0, 1, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (foot_combo[0]);
-	action_table.attach (*align, 1, 2, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (foot_combo[1]);
-	action_table.attach (*align, 2, 3, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	align = manage (new Alignment);
-	align->set (0.0, 0.5);
-	align->add (foot_combo[2]);
-	action_table.attach (*align, 3, 4, action_row, action_row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	action_row++;
-
-	table.attach (action_table, 0, 5, row, row+1, AttachOptions(FILL|EXPAND), AttachOptions (0));
-	row++;
-*/
 	hpacker.pack_start (table, true, true);
 	pack_start (hpacker, false, false);
 
-	/* update the port connection combo */
+	// update the port connection combos
 
-	update_port_combo ();
+	update_port_combos ();
 
 	/* catch future changes to connection state */
 
@@ -276,10 +145,12 @@ LKGUI::LKGUI (LaunchkeyMk3& lkmk3)
 	lk.ConnectionChange.connect (_port_connections, invalidator (*this), boost::bind (&LKGUI::connection_handler, this), gui_context());
 }
 
+//----------------------------------------------------------------------------------------------------------
 LKGUI::~LKGUI ()
 {
 }
 
+//----------------------------------------------------------------------------------------------------------
 void
 LKGUI::connection_handler ()
 {
@@ -290,12 +161,14 @@ LKGUI::connection_handler ()
 
 	PBD::Unwinder<bool> ici (ignore_active_change, true);
 
-	update_port_combo ();
+	update_port_combos ();
 }
 
+//----------------------------------------------------------------------------------------------------------
 void
-LKGUI::update_port_combo ()
+LKGUI::update_port_combos ()
 {
+	// get a list of all current midi input and output ports, and fill the combos with them
 	vector<string> midi_inputs;
 	vector<string> midi_outputs;
 
@@ -348,106 +221,7 @@ LKGUI::update_port_combo ()
 	}
 }
 
-/*
-void
-LKGUI::action_changed (Gtk::ComboBox* cb, FaderPort::ButtonID id, FaderPort::ButtonState bs)
-{
-	TreeModel::const_iterator row = cb->get_active ();
-	string action_path = (*row)[action_model.path()];
-
-	/* release binding *
-	fp.set_action (id, action_path, false, bs);
-}
-
-void
-LKGUI::build_action_combo (Gtk::ComboBox& cb, vector<pair<string,string> > const & actions, FaderPort::ButtonID id, FaderPort::ButtonState bs)
-{
-	const string current_action = fp.get_action (id, false, bs); /* lookup release action *
-	action_model.build_custom_action_combo (cb, actions, current_action);
-	cb.signal_changed().connect (sigc::bind (sigc::mem_fun (*this, &FPGUI::action_changed), &cb, id, bs));
-}
-
-void
-LKGUI::build_mix_action_combo (Gtk::ComboBox& cb, FaderPort::ButtonState bs)
-{
-	vector<pair<string,string> > actions;
-
-	actions.push_back (make_pair (string (_("Show Mixer Window")), string (X_("Common/show-mixer"))));
-	actions.push_back (make_pair (string (_("Show/Hide Mixer list")), string (X_("Mixer/ToggleMixerList"))));
-	actions.push_back (make_pair (string("Toggle Meterbridge"), string(X_("Common/toggle-meterbridge"))));
-	actions.push_back (make_pair (string (_("Show/Hide Editor mixer strip")), string (X_("Editor/show-editor-mixer"))));
-
-	build_action_combo (cb, actions, FaderPort::Mix, bs);
-}
-
-void
-LKGUI::build_proj_action_combo (Gtk::ComboBox& cb, FaderPort::ButtonState bs)
-{
-	vector<pair<string,string> > actions;
-
-	actions.push_back (make_pair (string (_("Show Editor Window")), string (X_("Common/show-editor"))));
-	actions.push_back (make_pair (string("Toggle Editor Lists"), string(X_("Editor/show-editor-list"))));
-	actions.push_back (make_pair (string("Toggle Summary"), string(X_("Editor/ToggleSummary"))));
-	actions.push_back (make_pair (string("Toggle Meterbridge"), string(X_("Common/toggle-meterbridge"))));
-	actions.push_back (make_pair (string (_("Zoom to Session")), string (X_("Editor/zoom-to-session"))));
-
-#if 0
-	actions.push_back (make_pair (string (_("Zoom In")), string (X_("Editor/temporal-zoom-in"))));
-	actions.push_back (make_pair (string (_("Zoom Out")), string (X_("Editor/temporal-zoom-out"))));
-#endif
-
-	build_action_combo (cb, actions, FaderPort::Proj, bs);
-}
-
-void
-LKGUI::build_trns_action_combo (Gtk::ComboBox& cb, FaderPort::ButtonState bs)
-{
-	vector<pair<string,string> > actions;
-
-	actions.push_back (make_pair (string("Toggle Big Clock"), string(X_("Window/toggle-big-clock"))));  //note:  this would really make sense if the Big Clock had transport buttons on it
-	actions.push_back (make_pair (string("Toggle Locations window"), string(X_("Window/toggle-locations"))));
-	actions.push_back (make_pair (string("Toggle Metronome"), string(X_("Transport/ToggleClick"))));
-	actions.push_back (make_pair (string("Toggle External Sync"), string(X_("Transport/ToggleExternalSync"))));
-	actions.push_back (make_pair (string("Toggle Follow Playhead"), string(X_("Editor/toggle-follow-playhead"))));
-
-//	actions.push_back (make_pair (string("Set Playhead @pointer"), string(X_("Editor/set-playhead"))));
-
-
-	build_action_combo (cb, actions, FaderPort::Trns, bs);
-}
-
-void
-LKGUI::build_foot_action_combo (Gtk::ComboBox& cb, FaderPort::ButtonState bs)
-{
-	vector<pair<string,string> > actions;
-
-	actions.push_back (make_pair (string("Toggle Roll"), string(X_("Transport/ToggleRoll"))));
-	actions.push_back (make_pair (string("Toggle Rec-Enable"), string(X_("Transport/Record"))));
-	actions.push_back (make_pair (string("Toggle Roll+Rec"), string(X_("Transport/record-roll"))));
-	actions.push_back (make_pair (string("Toggle Loop"), string(X_("Transport/Loop"))));
-	actions.push_back (make_pair (string("Toggle Click"), string(X_("Transport/ToggleClick"))));
-	actions.push_back (make_pair (string("Record with Pre-Roll"), string(X_("Transport/RecordPreroll"))));
-	actions.push_back (make_pair (string("Record with Count-In"), string(X_("Transport/RecordCountIn"))));
-
-	build_action_combo (cb, actions, FaderPort::Footswitch, bs);
-}
-
-
-void
-LKGUI::build_user_action_combo (Gtk::ComboBox& cb, FaderPort::ButtonState bs)
-{
-#ifndef MIXBUS
-	bs = FaderPort::ButtonState (bs|FaderPort::UserDown);
-#endif
-
-	/* set the active "row" to the right value for the current button binding *
-
-	string current_action = fp.get_action (FaderPort::User, false, bs); /* lookup release action *
-	action_model.build_action_combo (cb, current_action);
-	cb.signal_changed().connect (sigc::bind (sigc::mem_fun (*this, &LKGUI::action_changed), &cb, FaderPort::User, bs));
-
-}
-*/
+//----------------------------------------------------------------------------------------------------------
 Glib::RefPtr<Gtk::ListStore>
 LKGUI::build_midi_port_list (vector<string> const & ports)
 {
@@ -471,6 +245,7 @@ LKGUI::build_midi_port_list (vector<string> const & ports)
 	return store;
 }
 
+//----------------------------------------------------------------------------------------------------------
 void
 LKGUI::active_inport_changed (Gtk::ComboBox* combo)
 {
@@ -492,6 +267,7 @@ LKGUI::active_inport_changed (Gtk::ComboBox* combo)
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------
 void
 LKGUI::active_outport_changed (Gtk::ComboBox* combo)
 {
@@ -511,12 +287,3 @@ LKGUI::active_outport_changed (Gtk::ComboBox* combo)
 		}
 	}
 }
-
-
-
-
-
-
-
-
-

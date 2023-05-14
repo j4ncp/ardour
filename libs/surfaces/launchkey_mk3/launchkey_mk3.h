@@ -37,9 +37,6 @@ namespace PBD {
 
 #include <midi++/types.h>
 
-#include "midi_surface/midi_byte_array.h"
-#include "midi_surface/midi_surface.h"
-
 #include "glibmm/main.h"
 
 namespace MIDI {
@@ -61,45 +58,74 @@ class MIDIControllable;
 class MIDIFunction;
 class MIDIAction;
 
+
+class LaunchkeyMk3Request : public BaseUI::BaseRequestObject {
+  public:
+	LaunchkeyMk3Request () {}
+	~LaunchkeyMk3Request () {}
+};
+
 namespace ArdourSurface {
 
-class LaunchkeyMk3 : public MIDISurface {
+class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<LaunchkeyMk3Request> {
   public:
 	LaunchkeyMk3 (ARDOUR::Session&);
 	virtual ~LaunchkeyMk3();
 
+	// probe for existence of a connected launchkey (presence of MIDI ports with fitting names)
+	static bool probe (std::string& inp, std::string& outp);
+
+
 	int set_active (bool yn) override;
 
-	std::string input_port_name () const override;
-	std::string output_port_name () const override;
+	// serialization
+	XMLNode& get_state () const override;
+	int set_state (const XMLNode&, int version) override;
 
-//	XMLNode& get_state () const;
-//	int set_state (const XMLNode&, int version);
-
-	bool has_editor () const override { return true; }
-	void* get_gui () const override;
-	void  tear_down_gui () override;
-
-	/* Note: because the Launchkey speaks an inherently duplex protocol,
-	   we do not implement get/set_feedback() since this aspect of
-	   support for the protocol is not optional.
-	*/
-
-/*
-	void set_action (ButtonID, std::string const& action_name, bool on_press, FaderPort::ButtonState = ButtonState (0));
-	std::string get_action (ButtonID, bool on_press, FaderPort::ButtonState = ButtonState (0));
-*/
-  private:
-/*
-	std::shared_ptr<ARDOUR::Stripable> _current_stripable;
-	std::weak_ptr<ARDOUR::Stripable> pre_master_stripable;
-	std::weak_ptr<ARDOUR::Stripable> pre_monitor_stripable;
-*/
 	// GUI
+	bool  has_editor () const override { return true; }
+	void* get_gui () const override;
+	PBD::Signal0<void> ConnectionChange;  // this is emitted to update the UI if the midi connections change
+
+	// getters
+	std::shared_ptr<ARDOUR::Port> input_port() const;
+	std::shared_ptr<ARDOUR::Port> output_port() const;
+
+
+  private:
+
+	// constants
+	static constexpr char PORT_NAME_PREFIX[] = "Launchkey Mk3";
+
+	// to communicate with the launchkey, those are set up in constructor and released in destructor
+	std::shared_ptr<ARDOUR::AsyncMIDIPort> _input_port;
+	std::shared_ptr<ARDOUR::AsyncMIDIPort> _output_port;
+
+	// private GUI methods, lifecycle management & "remote control"
 	mutable void *gui;
 	void build_gui ();
+	void tear_down_gui () override;
 
+	void stop ();
+	void do_request (LaunchkeyMk3Request*) override;
+	void thread_init () override;
 
+	// needed for callbacks from the Engine, to react to newly connected and created ports
+	enum ConnectionState {
+		InputConnected = 0x1,
+		OutputConnected = 0x2
+	};
+
+	int connection_state;
+	PBD::ScopedConnectionList port_connections;
+	void port_registration_handler ();
+	void port_connection_handler (std::weak_ptr<ARDOUR::Port>, std::string, std::weak_ptr<ARDOUR::Port>, std::string, bool);
+
+	bool device_active;      // changes in this status will be communicated to the GUI by ConnectionChange
+	void connected ();
+	void disconnected ();
+
+	// ---------------------------------------------------------------------------------------------
 	// Launchkey properties
 
 	// whether Launchkey is in DAW mode. Also used as an indicator
@@ -155,25 +181,15 @@ class LaunchkeyMk3 : public MIDISurface {
 	void daw_mode_on();
 	void daw_mode_off();
 
-
-/*
-	int fader_msb;
-	int fader_lsb;
-	bool fader_is_touched;
-
-	PBD::microseconds_t last_encoder_time;
-	int last_good_encoder_delta;
-	int last_encoder_delta, last_last_encoder_delta;
-*/
-	void handle_midi_sysex (MIDI::Parser &p, MIDI::byte *, size_t) override;
-	void handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb) override;
+	void handle_midi_sysex (MIDI::Parser &p, MIDI::byte *, size_t);
+	void handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 /*
 	void handle_midi_polypressure_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 	void handle_midi_pitchbend_message (MIDI::Parser &, MIDI::pitchbend_t pb);
 
 
 */
-
+/*
 	// event handlers called by superclass
 	int begin_using_device () override;
 	int stop_using_device () override;
@@ -181,132 +197,11 @@ class LaunchkeyMk3 : public MIDISurface {
 	int device_acquire () override { return 0; }
 	void device_release () override {}
 
-//	ButtonState button_state;
-/*
-	friend class Button;
 
-	class Button {
-	  public:
-
-		enum ActionType {
-			NamedAction,
-			InternalFunction,
-		};
-
-		Button (FaderPort& f, std::string const& str, ButtonID i, int o)
-			: fp (f)
-			, name (str)
-			, id (i)
-			, out (o)
-			, flash (false)
-		{}
-
-		void set_action (std::string const& action_name, bool on_press, FaderPort::ButtonState = ButtonState (0));
-		void set_action (boost::function<void()> function, bool on_press, FaderPort::ButtonState = ButtonState (0));
-		std::string get_action (bool press, FaderPort::ButtonState bs = ButtonState (0));
-
-		void set_led_state (bool onoff);
-		bool invoke (ButtonState bs, bool press);
-		bool uses_flash () const { return flash; }
-		void set_flash (bool yn) { flash = yn; }
-
-		XMLNode& get_state () const;
-		int set_state (XMLNode const&);
-
-		sigc::connection timeout_connection;
-
-	  private:
-		FaderPort& fp;
-		std::string name;
-		ButtonID id;
-		int out;
-		bool flash;
-
-		struct ToDo {
-			ActionType type;
-			/* could be a union if boost::function didn't require a
-			 * constructor
-			 *
-			std::string action_name;
-			boost::function<void()> function;
-		};
-
-		typedef std::map<FaderPort::ButtonState,ToDo> ToDoMap;
-		ToDoMap on_press;
-		ToDoMap on_release;
-	};
-
-	typedef std::map<ButtonID,Button> ButtonMap;
-
-	ButtonMap buttons;
-	Button& get_button (ButtonID) const;
-
-	std::set<ButtonID> buttons_down;
-	std::set<ButtonID> consumed;
-
-	bool button_long_press_timeout (ButtonID id);
-	void start_press_timeout (Button&, ButtonID);
-
-	void all_lights_out ();
-
-	void map_recenable_state ();
-	void map_transport_state ();
-
-	sigc::connection periodic_connection;
-	bool periodic ();
-
-	sigc::connection blink_connection;
-	typedef std::list<ButtonID> Blinkers;
-	Blinkers blinkers;
-	bool blink_state;
-	bool blink ();
-	void start_blinking (ButtonID);
-	void stop_blinking (ButtonID);
-
-	void set_current_stripable (std::shared_ptr<ARDOUR::Stripable>);
-	void drop_current_stripable ();
-	void use_master ();
-	void use_monitor ();
 */
-
 	void stripable_selection_changed () override;
 
-/*
-	PBD::ScopedConnection selection_connection;
-	PBD::ScopedConnectionList stripable_connections;
 
-	void map_stripable_state ();
-	void map_solo ();
-	void map_mute ();
-	bool rec_enable_state;
-	void map_recenable ();
-	void map_gain ();
-	void map_cut ();
-	void map_auto ();
-	void parameter_changed (std::string);
-
-	/* operations (defined in operations.cc) *
-
-	void read ();
-	void write ();
-
-	void left ();
-	void right ();
-
-	void touch ();
-	void off ();
-
-	void undo ();
-	void redo ();
-	void solo ();
-	void mute ();
-	void rec_enable ();
-
-	void pan_azimuth (int);
-	void pan_width (int);
-
-	void punch ();
-*/
 };
 
 }

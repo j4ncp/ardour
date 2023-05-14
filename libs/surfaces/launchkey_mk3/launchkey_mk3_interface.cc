@@ -49,12 +49,19 @@ delete_launchkey_mk3_midi_protocol (ControlProtocol* cp)
 	delete cp;
 }
 
+static bool
+probe_launchkey_mk3_midi_protocol ()
+{
+	std::string i, o;
+	return LaunchkeyMk3::probe (i, o);
+}
+
 static ControlProtocolDescriptor launchkey_mk3_midi_descriptor = {
 	/*name :              */   "Novation Launchkey MK3",
 	/*id :                */   "uri://ardour.org/surfaces/launchkey_mk3:0",
 	/*module :            */   0,
 	/*available :         */   0,
-	/*probe_port :        */   0,
+	/*probe_port :        */   probe_launchkey_mk3_midi_protocol,
 	/*match_usb :         */   0,
 	/*initialize :        */   new_launchkey_mk3_midi_protocol,
 	/*destroy :           */   delete_launchkey_mk3_midi_protocol,
