@@ -15,10 +15,11 @@ def configure(conf):
 def build(bld):
     obj = bld(features = 'cxx cxxshlib')
     obj.source = '''
-            launchkey_mk3.cc
             gui.cc
+            launchkey_mk3.cc
+            launchkey_mk3_midi.cc
+            launchkey_mk3_ports.cc
             launchkey_mk3_interface.cc
-            operations.cc
     '''
     obj.defines      = [ 'PACKAGE="ardour_launchkey_mk3"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]

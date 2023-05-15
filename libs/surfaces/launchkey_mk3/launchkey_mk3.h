@@ -97,10 +97,7 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 	// constants
 	static constexpr char PORT_NAME_PREFIX[] = "Launchkey Mk3";
 
-	// to communicate with the launchkey, those are set up in constructor and released in destructor
-	std::shared_ptr<ARDOUR::AsyncMIDIPort> _input_port;
-	std::shared_ptr<ARDOUR::AsyncMIDIPort> _output_port;
-
+	//----------------------------------------------------------------------------
 	// private GUI methods, lifecycle management & "remote control"
 	mutable void *gui;
 	void build_gui ();
@@ -110,6 +107,13 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 	void do_request (LaunchkeyMk3Request*) override;
 	void thread_init () override;
 
+	//----------------------------------------------------------------------------
+	// ports handling
+
+	// to communicate with the launchkey, those are set up in constructor and released in destructor
+	std::shared_ptr<ARDOUR::AsyncMIDIPort> _input_port;
+	std::shared_ptr<ARDOUR::AsyncMIDIPort> _output_port;
+
 	// needed for callbacks from the Engine, to react to newly connected and created ports
 	enum ConnectionState {
 		InputConnected = 0x1,
@@ -118,12 +122,29 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 
 	int connection_state;
 	PBD::ScopedConnectionList port_connections;
+	bool init_ports ();
+	void release_ports ();
 	void port_registration_handler ();
 	void port_connection_handler (std::weak_ptr<ARDOUR::Port>, std::string, std::weak_ptr<ARDOUR::Port>, std::string, bool);
 
 	bool device_active;      // changes in this status will be communicated to the GUI by ConnectionChange
 	void connected ();
 	void disconnected ();
+
+	// ---------------------------------------------------------------------------------------------
+	// MIDI methods
+
+	// convenience function to send MIDI data to our output port; can use initializer list.
+	void send_midi (const std::vector<MIDI::byte>& data);
+
+	// called after ports are initialized and connected / before they are destroyed or disconnected
+	void start_midi_handling ();
+	void stop_midi_handling ();
+
+	// incoming MIDI handlers
+	bool handle_incoming_midi (Glib::IOCondition, std::weak_ptr<ARDOUR::AsyncMIDIPort>);  // dispatches incoming bytes to parser
+	void handle_midi_sysex (MIDI::Parser &p, MIDI::byte *, size_t);
+	void handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 
 	// ---------------------------------------------------------------------------------------------
 	// Launchkey properties
@@ -177,12 +198,9 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 	LkFaderMode current_fader_mode;
 
 
-	// helper functions to put Launchkey into and out of DAW mode
-	void daw_mode_on();
-	void daw_mode_off();
 
-	void handle_midi_sysex (MIDI::Parser &p, MIDI::byte *, size_t);
-	void handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+
+
 /*
 	void handle_midi_polypressure_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 	void handle_midi_pitchbend_message (MIDI::Parser &, MIDI::pitchbend_t pb);
