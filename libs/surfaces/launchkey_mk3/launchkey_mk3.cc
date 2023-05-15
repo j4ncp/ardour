@@ -146,41 +146,6 @@ LaunchkeyMk3::disconnected ()
 }
 
 //----------------------------------------------------------------------------------------------------------
-void
-LaunchkeyMk3::handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb)
-{
-	//if (tb->controller_number)
-
-	/*
-	bool was_fader = false;
-
-	if (tb->controller_number == 0x0) {
-		fader_msb = tb->value;
-		was_fader = true;
-	} else if (tb->controller_number == 0x20) {
-		fader_lsb = tb->value;
-		was_fader = true;
-	}
-
-	if (was_fader) {
-		if (_current_stripable) {
-			std::shared_ptr<AutomationControl> gain = _current_stripable->gain_control ();
-			if (gain) {
-				int ival = (fader_msb << 7) | fader_lsb;
-				float val = gain->interface_to_internal (ival/16383.0);
-				/* even though the faderport only controls a
-				   single stripable at a time, allow the fader to
-				   modify the group, if appropriate.
-				*
-				_current_stripable->gain_control()->set_value (val, Controllable::UseGroup);
-			}
-		}
-	}*/
-}
-
-
-
-//----------------------------------------------------------------------------------------------------------
 int
 LaunchkeyMk3::set_active (bool yn)
 {

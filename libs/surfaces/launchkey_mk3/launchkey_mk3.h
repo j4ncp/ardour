@@ -143,8 +143,23 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 
 	// incoming MIDI handlers
 	bool handle_incoming_midi (Glib::IOCondition, std::weak_ptr<ARDOUR::AsyncMIDIPort>);  // dispatches incoming bytes to parser
+
+	PBD::ScopedConnectionList midi_connections;
+
+	// incoming sysex is only used to decode system identification info
 	void handle_midi_sysex (MIDI::Parser &p, MIDI::byte *, size_t);
-	void handle_midi_controller_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+
+	// pots and faders send CC on channel 16 always, also most other buttons on the launchkey.
+	void handle_midi_controller_channel16 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	// a few buttons report CC on channel 1
+	void handle_midi_controller_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	// pads send note_on (with vel 0 for off) and poly_pressure in session and drum modes,
+	//   (on channel 1 in the former and channel 10 in the latter).
+	// in other modes they directly send on the MIDI port (instead of the DAW one)
+	void handle_midi_note_on_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	void handle_midi_polypressure_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	void handle_midi_note_on_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	void handle_midi_polypressure_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 
 	// ---------------------------------------------------------------------------------------------
 	// Launchkey properties
@@ -198,28 +213,8 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 	LkFaderMode current_fader_mode;
 
 
-
-
-
-/*
-	void handle_midi_polypressure_message (MIDI::Parser &, MIDI::EventTwoBytes* tb);
-	void handle_midi_pitchbend_message (MIDI::Parser &, MIDI::pitchbend_t pb);
-
-
-*/
-/*
-	// event handlers called by superclass
-	int begin_using_device () override;
-	int stop_using_device () override;
-
-	int device_acquire () override { return 0; }
-	void device_release () override {}
-
-
-*/
+	// TBD:
 	void stripable_selection_changed () override;
-
-
 };
 
 }

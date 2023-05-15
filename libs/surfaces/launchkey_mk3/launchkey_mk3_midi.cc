@@ -190,3 +190,51 @@ LaunchkeyMk3::handle_midi_sysex (MIDI::Parser &p, MIDI::byte *buf, size_t sz)
 		}
 	}
 }
+
+//----------------------------------------------------------------------------------------------------------
+void
+LaunchkeyMk3::handle_midi_controller_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+{
+	// TBD
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: CC on channel 1\n");
+}
+
+//----------------------------------------------------------------------------------------------------------
+void
+LaunchkeyMk3::handle_midi_controller_channel16 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+{
+	// TBD
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: CC on channel 16\n");
+}
+
+//----------------------------------------------------------------------------------------------------------
+void
+LaunchkeyMk3::handle_midi_note_on_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+{
+	// TBD
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: NOTE ON on channel 1\n");
+}
+
+//----------------------------------------------------------------------------------------------------------
+void
+LaunchkeyMk3::handle_midi_polypressure_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+{
+	// TBD
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: POLY PRESS on channel 1\n");
+}
+
+//----------------------------------------------------------------------------------------------------------
+void
+LaunchkeyMk3::handle_midi_note_on_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+{
+	// TBD
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: NOTE ON on channel 10\n");
+}
+
+//----------------------------------------------------------------------------------------------------------
+void
+LaunchkeyMk3::handle_midi_polypressure_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+{
+	// TBD
+	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: POLY PRESS on channel 10\n");
+}
