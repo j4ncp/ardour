@@ -31,6 +31,8 @@
 
 #include "control_protocol/control_protocol.h"
 
+#include "rangecontrollable.h"
+
 namespace PBD {
 	class Controllable;
 }
@@ -52,11 +54,6 @@ namespace ARDOUR {
 	class Session;
 	class MidiPort;
 }
-
-
-class MIDIControllable;
-class MIDIFunction;
-class MIDIAction;
 
 
 class LaunchkeyMk3Request : public BaseUI::BaseRequestObject {
@@ -91,6 +88,7 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 	std::shared_ptr<ARDOUR::Port> input_port() const;
 	std::shared_ptr<ARDOUR::Port> output_port() const;
 
+	CONTROL_PROTOCOL_THREADS_NEED_TEMPO_MAP_DECL();
 
   private:
 
@@ -150,16 +148,16 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 	void handle_midi_sysex (MIDI::Parser &p, MIDI::byte *, size_t);
 
 	// pots and faders send CC on channel 16 always, also most other buttons on the launchkey.
-	void handle_midi_controller_channel16 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	void handle_midi_buttons_channel16 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 	// a few buttons report CC on channel 1
-	void handle_midi_controller_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	void handle_midi_buttons_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 	// pads send note_on (with vel 0 for off) and poly_pressure in session and drum modes,
 	//   (on channel 1 in the former and channel 10 in the latter).
 	// in other modes they directly send on the MIDI port (instead of the DAW one)
-	void handle_midi_note_on_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
-	void handle_midi_polypressure_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
-	void handle_midi_note_on_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
-	void handle_midi_polypressure_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	//void handle_midi_note_on_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	//void handle_midi_polypressure_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	//void handle_midi_note_on_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
+	//void handle_midi_polypressure_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb);
 
 	// ---------------------------------------------------------------------------------------------
 	// Launchkey properties
@@ -171,46 +169,9 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 	// whether we have a bigger model with faders (49, 61, 88)
 	bool has_faders;
 
-	// the pads, faders and pots can each be in one of several modes:
-	enum class LkPadMode {
-		DRUM,
-		SESSION,
-		SCALE_CHORDS,
-		USER_CHORDS,
-		CUSTOM0,
-		CUSTOM1,
-		CUSTOM2,
-		CUSTOM3,
-		DEVICE_SELECT,
-		NAVIGATION
-	};
-
-	enum class LkPotMode {
-		VOLUME,
-		DEVICE,
-		PAN,
-		SEND_A,
-		SEND_B,
-		CUSTOM0,
-		CUSTOM1,
-		CUSTOM2,
-		CUSTOM3
-	};
-
-	enum class LkFaderMode {
-		VOLUME,
-		DEVICE,
-		SEND_A,
-		SEND_B,
-		CUSTOM0,
-		CUSTOM1,
-		CUSTOM2,
-		CUSTOM3
-	};
-
-	LkPadMode current_pad_mode;
-	LkPotMode current_pot_mode;
-	LkFaderMode current_fader_mode;
+	// pots and faders
+	std::vector<std::shared_ptr<RangeControllable>> pots;
+	std::vector<std::shared_ptr<RangeControllable>> faders;
 
 
 	// TBD:

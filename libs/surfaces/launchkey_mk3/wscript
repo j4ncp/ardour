@@ -20,6 +20,7 @@ def build(bld):
             launchkey_mk3_midi.cc
             launchkey_mk3_ports.cc
             launchkey_mk3_interface.cc
+            rangecontrollable.cc
     '''
     obj.defines      = [ 'PACKAGE="ardour_launchkey_mk3"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]

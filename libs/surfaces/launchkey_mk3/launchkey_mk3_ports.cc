@@ -133,37 +133,13 @@ LaunchkeyMk3::init_ports ()
 	// Incoming CC on channel 1 (used by a handful of buttons)
 	p->channel_controller[0].connect_same_thread (
 		midi_connections,
-		boost::bind (&LaunchkeyMk3::handle_midi_controller_channel1, this, _1, _2)
+		boost::bind (&LaunchkeyMk3::handle_midi_buttons_channel1, this, _1, _2)
 	);
 
 	// Incoming CC on channel 16 (used by all other buttons, and by pots and faders in all modes)
 	p->channel_controller[15].connect_same_thread (
 		midi_connections,
-		boost::bind (&LaunchkeyMk3::handle_midi_controller_channel16, this, _1, _2)
-	);
-
-	// Incoming NOTE ON on channel 1 (used by pads in session mode)
-	p->channel_note_on[0].connect_same_thread (
-		midi_connections,
-		boost::bind (&LaunchkeyMk3::handle_midi_note_on_channel1, this, _1, _2)
-	);
-
-	// Incoming NOTE ON on channel 10 (used by pads in drum mode)
-	p->channel_note_on[9].connect_same_thread (
-		midi_connections,
-		boost::bind (&LaunchkeyMk3::handle_midi_note_on_channel10, this, _1, _2)
-	);
-
-	// Incoming POLY PRESSURE on channel 1 (used by pads in session mode)
-	p->channel_poly_pressure[0].connect_same_thread (
-		midi_connections,
-		boost::bind (&LaunchkeyMk3::handle_midi_polypressure_channel1, this, _1, _2)
-	);
-
-	// Incoming POLY PRESSURE on channel 10 (used by pads in drum mode)
-	p->channel_poly_pressure[9].connect_same_thread (
-		midi_connections,
-		boost::bind (&LaunchkeyMk3::handle_midi_polypressure_channel10, this, _1, _2)
+		boost::bind (&LaunchkeyMk3::handle_midi_buttons_channel16, this, _1, _2)
 	);
 
 	/* This connection means that whenever data is ready from the input

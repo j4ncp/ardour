@@ -181,11 +181,6 @@ LaunchkeyMk3::handle_midi_sysex (MIDI::Parser &p, MIDI::byte *buf, size_t sz)
 			DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Enable pot continuous control pot pickup\n");
 			send_midi ({ 0x9F, 0x0A, 0x7F });    // send note on for pickup (0x0C) on channel 16
 
-			// init default modes
-			current_pad_mode = LkPadMode::SESSION;
-			current_pot_mode = LkPotMode::PAN;
-			current_fader_mode = LkFaderMode::VOLUME;
-
 			// TBD: potentially other init work
 		}
 	}
@@ -193,48 +188,116 @@ LaunchkeyMk3::handle_midi_sysex (MIDI::Parser &p, MIDI::byte *buf, size_t sz)
 
 //----------------------------------------------------------------------------------------------------------
 void
-LaunchkeyMk3::handle_midi_controller_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+LaunchkeyMk3::handle_midi_buttons_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
 {
+	// TBD: value == 127 means pressed, == 0 means released.
+	if (tb->value < 64)
+		return;
+
+	switch (tb->controller_number) {
+		case 0x6C:   // shift key
+			break;
+
+		case 0x68:   // right arrow above stop/solo/mute
+			break;
+
+		case 0x69:   // stop/solo/mute
+			break;
+	}
+
 	// TBD
 	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: CC on channel 1\n");
 }
 
 //----------------------------------------------------------------------------------------------------------
 void
-LaunchkeyMk3::handle_midi_controller_channel16 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
+LaunchkeyMk3::handle_midi_buttons_channel16 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
 {
-	// TBD
+	/*
+	if (tb->controller_number == 0x03) {
+		// indicates pad mode switch
+		switch(tb->value) {
+			case 0x00:   current_pad_mode = LkPadMode::CUSTOM0;        break;
+			case 0x01:   current_pad_mode = LkPadMode::DRUM;           break;
+			case 0x02:   current_pad_mode = LkPadMode::SESSION;        break;
+			case 0x03:   current_pad_mode = LkPadMode::SCALE_CHORDS;   break;
+			case 0x04:   current_pad_mode = LkPadMode::USER_CHORDS;    break;
+			case 0x05:   current_pad_mode = LkPadMode::CUSTOM0;        break;
+			case 0x06:   current_pad_mode = LkPadMode::CUSTOM1;        break;
+			case 0x07:   current_pad_mode = LkPadMode::CUSTOM2;        break;
+			case 0x08:   current_pad_mode = LkPadMode::CUSTOM3;        break;
+			case 0x09:   current_pad_mode = LkPadMode::DEVICE_SELECT;  break;
+			case 0x0A:   current_pad_mode = LkPadMode::NAVIGATION;     break;
+		}
+		// TBD: init the new mode
+	} */
+	/*
+	 if (tb->controller_number >= 0x25 && tb->controller_number <= 0x2D && has_faders) {
+		// TBD: handle fader button changes
+		// TBD: value == 127 means pressed, == 0 means released.
+	} else */
+
+	// check if it is one of the buttons
+	// TBD: value == 127 means pressed, == 0 means released.
+	if (tb->value < 64)
+		return;
+
+	switch (tb->controller_number)
+	{
+		// NOTE: arrows are flipped on my launchkey compared to documentation
+		case 0x67:   // left arrow
+			access_action("Editor/step-tracks-up");
+			break;
+
+		case 0x66:   // right arrow
+			access_action("Editor/step-tracks-down");
+			break;
+
+		case 0x6A:   // arrow up
+			break;
+
+		case 0x6B:   // arrow down
+			break;
+
+		case 0x33:   // device select
+			break;
+
+		case 0x34:   // device lock
+			break;
+
+		case 0x4A:   // capture midi
+			break;
+
+		case 0x4B:   // quantise
+			access_action("Editor/quantize");
+			break;
+
+		case 0x4C:   // click
+			access_action("Transport/ToggleClick");
+			break;
+
+		case 0x4D:   // undo
+			access_action("Editor/Undo");
+			break;
+
+		case 0x73:   // "play"
+			access_action("Transport/Roll");
+			break;
+
+		case 0x74:   // "stop"
+			access_action("Transport/Stop");
+			break;
+
+		case 0x75:   // "record"
+			access_action("Transport/Record");
+			break;
+
+		case 0x76:   // "loop"
+			access_action("Transport/Loop");
+			break;
+	}
+
+
 	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: CC on channel 16\n");
 }
 
-//----------------------------------------------------------------------------------------------------------
-void
-LaunchkeyMk3::handle_midi_note_on_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
-{
-	// TBD
-	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: NOTE ON on channel 1\n");
-}
-
-//----------------------------------------------------------------------------------------------------------
-void
-LaunchkeyMk3::handle_midi_polypressure_channel1 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
-{
-	// TBD
-	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: POLY PRESS on channel 1\n");
-}
-
-//----------------------------------------------------------------------------------------------------------
-void
-LaunchkeyMk3::handle_midi_note_on_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
-{
-	// TBD
-	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: NOTE ON on channel 10\n");
-}
-
-//----------------------------------------------------------------------------------------------------------
-void
-LaunchkeyMk3::handle_midi_polypressure_channel10 (MIDI::Parser &, MIDI::EventTwoBytes* tb)
-{
-	// TBD
-	DEBUG_TRACE (DEBUG::LaunchkeyMk3, "MIDI: POLY PRESS on channel 10\n");
-}
