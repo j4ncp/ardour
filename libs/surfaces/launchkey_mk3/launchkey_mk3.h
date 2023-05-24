@@ -31,7 +31,7 @@
 
 #include "control_protocol/control_protocol.h"
 
-#include "rangecontrollable.h"
+#include "rangecontrollableset.h"
 
 namespace PBD {
 	class Controllable;
@@ -170,8 +170,8 @@ class LaunchkeyMk3 : public ARDOUR::ControlProtocol, public AbstractUI<Launchkey
 	bool has_faders;
 
 	// pots and faders
-	std::vector<std::shared_ptr<RangeControllable>> pots;
-	std::vector<std::shared_ptr<RangeControllable>> faders;
+	std::shared_ptr<RangeControllableSet> pots;
+	std::shared_ptr<RangeControllableSet> faders;
 
 
 	// TBD:

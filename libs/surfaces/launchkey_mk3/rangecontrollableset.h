@@ -28,6 +28,7 @@
 #include "pbd/stateful.h"
 
 #include "ardour/types.h"
+#include "ardour/session.h"
 
 namespace MIDI {
 	class Channel;
@@ -40,22 +41,13 @@ namespace ARDOUR {
 	class AsyncMIDIPort;
 }
 
-/* A helper class to deal with the messaging of pots and faders.
- *
- *
- *
- *
- *
- *
- *
+/* A helper class to manage a set of 8 pots or 8+1 faders
  */
-class RangeControllable// : public PBD::Stateful
+class RangeControllableSet
 {
 public:
-	RangeControllable (MIDI::Parser&, uint8_t cc, bool fader);
-	virtual ~RangeControllable ();
-
-
+	RangeControllableSet (MIDI::Parser&, ARDOUR::Session&, bool faders);
+	virtual ~RangeControllableSet ();
 
 	// IDs for all the different possible modes
 	enum ControllableMode {
@@ -70,37 +62,34 @@ public:
 		MODE_CUSTOM3 = 9
 	};
 
-	using ValueChangeSignal = PBD::Signal1<void, uint8_t>;
-
-	ValueChangeSignal new_value_received;
+	void reassign_stripables ();
 
 
 protected:
 
-	uint8_t    _cc;        // which CC this controllable reacts to
-	bool       _fader;     // whether this controllable is a fader (if false, it is a pot)
+	ARDOUR::Session& _session;       // used to enumerate stripables
+
+	const bool     _faders;          // if true, this is a set of faders
+	const uint8_t  _starting_cc;     // which set of CCs the range controllables react to [starting_cc, .., starting_cc + num_items]
+
+	ControllableMode _current_mode;  // the mode the controllables are currently in
 
 	PBD::ScopedConnection controllable_midi_connection;
-	PBD::ScopedConnection controllable_mode_connection;
 
+	//
+	std::vector<std::shared_ptr<ARDOUR::AutomationControl>> controllables;
 
 	Glib::Threads::Mutex controllable_lock;
 
 
 	// the callback registered for the incoming midi messages on the specified channel
-	void midi_cc_receiver (MIDI::Parser &, MIDI::EventTwoBytes *);
+	void midi_cc_receiver_15 (MIDI::Parser &, MIDI::EventTwoBytes *);
+	void midi_cc_receiver_16 (MIDI::Parser &, MIDI::EventTwoBytes *);
 
-	// helper methods called by the cc receiver
-	void pot_mode_switch (ControllableMode new_mode);
-	void fader_mode_switch (ControllableMode new_mode);
-
-	// callbacks for new values
-	void new_value_volume (uint8_t new_value);
-	void new_value_device (uint8_t new_value);
-	void new_value_pan (uint8_t new_value);
-	void new_value_send_a (uint8_t new_value);
-	void new_value_send_b (uint8_t new_value);
-
+	// helper methods called by the cc receivers
+	void mode_switch (ControllableMode new_mode);
+	void touch_event (uint8_t id, bool on);
+	void new_value_received (uint8_t id, uint8_t value);
 };
 
 #endif // __launchkey_mk3_rangecontrollable_h__

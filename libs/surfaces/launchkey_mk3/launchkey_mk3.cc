@@ -80,24 +80,8 @@ LaunchkeyMk3::LaunchkeyMk3 (Session& s)
 	// connect MIDI signal handlers for pots and faders
 	MIDI::Parser& p = *_input_port->parser();
 
-	pots.push_back(std::make_shared<RangeControllable>(p, 0x15, false));
-	pots.push_back(std::make_shared<RangeControllable>(p, 0x16, false));
-	pots.push_back(std::make_shared<RangeControllable>(p, 0x17, false));
-	pots.push_back(std::make_shared<RangeControllable>(p, 0x18, false));
-	pots.push_back(std::make_shared<RangeControllable>(p, 0x19, false));
-	pots.push_back(std::make_shared<RangeControllable>(p, 0x1A, false));
-	pots.push_back(std::make_shared<RangeControllable>(p, 0x1B, false));
-	pots.push_back(std::make_shared<RangeControllable>(p, 0x1C, false));
-
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x35, true));
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x36, true));
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x37, true));
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x38, true));
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x39, true));
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x3A, true));
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x3B, true));
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x3C, true));
-	faders.push_back(std::make_shared<RangeControllable>(p, 0x3D, true));
+	pots = std::make_shared<RangeControllableSet> (p, s, false);
+	faders = std::make_shared<RangeControllableSet> (p, s, true);
 }
 
 //----------------------------------------------------------------------------------------------------------

@@ -75,6 +75,10 @@ LaunchkeyMk3::stop_midi_handling ()
 		// Continuous control pot pickup
 		DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Disable pot continuous control pot pickup\n");
 		send_midi ({ 0x8F, 0x0A, 0x00 });    // send note off for pickup (0x0A) on channel 16
+
+		// send CC touch events
+		DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Disable sending CC touch events\n");
+		send_midi ({ 0x8F, 0x0B, 0x00 });    // send note off for touch (0x0B) on channel 16
 	}
 }
 
@@ -170,6 +174,10 @@ LaunchkeyMk3::handle_midi_sysex (MIDI::Parser &p, MIDI::byte *buf, size_t sz)
 			DEBUG_TRACE(DEBUG::LaunchkeyMk3, string_compose("Firmware version is %1\n", versionInfo));
 			DEBUG_TRACE(DEBUG::LaunchkeyMk3, string_compose("Currently in %1 mode\n", modeIndicator==0x01 ? "APP" : "BOOT"));
 
+			// if this is a model without faders, we can get rid of the faders object,
+			// this will also disconnect any callbacks related to faders
+			faders.reset();
+
 			// enter DAW mode and set default state variables
 
 			// DAW mode
@@ -179,7 +187,11 @@ LaunchkeyMk3::handle_midi_sysex (MIDI::Parser &p, MIDI::byte *buf, size_t sz)
 
 			// Continuous control pot pickup
 			DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Enable pot continuous control pot pickup\n");
-			send_midi ({ 0x9F, 0x0A, 0x7F });    // send note on for pickup (0x0C) on channel 16
+			send_midi ({ 0x9F, 0x0A, 0x7F });    // send note on for pickup (0x0A) on channel 16
+
+			// send CC touch events
+			DEBUG_TRACE (DEBUG::LaunchkeyMk3, "Enable sending CC touch events\n");
+			send_midi ({ 0x9F, 0x0B, 0x7F });    // send note on for touch (0x0B) on channel 16
 
 			// TBD: potentially other init work
 		}
